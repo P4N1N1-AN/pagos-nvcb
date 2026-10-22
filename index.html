@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f5c4d">
+<title>Pagos NV</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  html,body{margin:0;height:100%;background:#0f5c4d;overflow:hidden}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f3f6f4}
+  #carga{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    color:#fff;font:600 16px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+  #carga img{width:96px;height:96px;border-radius:22px}
+  #carga a{color:#fff;background:rgba(255,255,255,.18);padding:10px 16px;border-radius:10px;text-decoration:none}
+  #carga small{opacity:.8;font-weight:400;max-width:320px}
+</style>
+</head>
+<body>
+<div id="carga">
+  <img src="icon-192.png" alt="">
+  <div id="msg">Cargando pagos…</div>
+</div>
+<script>
+  // ⬇⬇ PEGA AQUÍ LA URL DE TU APP WEB DE APPS SCRIPT (la que termina en /exec) ⬇⬇
+  const URL_APP = 'https://script.google.com/macros/s/AKfycbxZs0cYcrJycnTGwjSXcpn_gA2DZ8h_JrcXnvc14MX5VaJCJa52Y3tSQB2Hp8NMy7Wh2A/exec';
+
+  const carga = document.getElementById('carga'), msg = document.getElementById('msg');
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(URL_APP)) {
+    msg.innerHTML = 'Falta pegar la URL de Apps Script en <b>index.html</b> (línea URL_APP).';
+  } else {
+    const f = document.createElement('iframe');
+    f.src = URL_APP;
+    f.allow = 'clipboard-write';
+    f.style.visibility = 'hidden';
+    f.onload = () => { f.style.visibility = 'visible'; carga.hidden = true; };
+    document.body.appendChild(f);
+    // Si en 15 s no cargó (por ejemplo, Google pide iniciar sesión), ofrecer abrirla directo
+    setTimeout(() => {
+      if (!carga.hidden) {
+        msg.innerHTML = 'No cargó todavía.<br><small>Puede que Google te pida iniciar sesión. Ábrela una vez directo, inicia sesión con tu cuenta personal y vuelve a abrir la app.</small>';
+        const a = document.createElement('a'); a.href = URL_APP; a.textContent = 'Abrir e iniciar sesión'; a.target = '_blank';
+        carga.appendChild(a);
+      }
+    }, 15000);
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
