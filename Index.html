@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f5c4d">
+<title>Pagos Familia NV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: una columna para el celular — encabezado con mes, tarjetas por fecha de pago, lista de la fecha elegida */
+:root{
+  --bg:#f3f6f4; --card:#ffffff; --fg:#17231f; --muted:#5d6e68; --line:#dfe7e3;
+  --brand:#0f5c4d; --brand-fg:#ffffff;
+  --d15:#0e7c86; --d25:#c46a12; --d30:#5b4bc4; --dP:#b8327a;
+  --ok:#1f8a4c; --ok-bg:#e3f4ea; --warn:#b4540a; --warn-bg:#fdf0e2; --bad:#c0352b; --bad-bg:#fbe7e5;
+  --display:'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --body:'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1513; --card:#18211e; --fg:#e7efeb; --muted:#93a59e; --line:#2a3632;
+    --brand:#14735f; --brand-fg:#ffffff;
+    --d15:#3cb6c0; --d25:#e89a4c; --d30:#9a8cf0; --dP:#e46aab;
+    --ok:#55c987; --ok-bg:#173225; --warn:#f0a35a; --warn-bg:#3a2714; --bad:#f07a70; --bad-bg:#3a1a17;
+    color-scheme: dark;
+  }<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f5c4d">
+<title>Pagos NV</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  html,body{margin:0;height:100%;background:#0f5c4d;overflow:hidden}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f3f6f4}
+  #carga{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    color:#fff;font:600 16px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+  #carga img{width:96px;height:96px;border-radius:22px}
+  #carga a{color:#fff;background:rgba(255,255,255,.18);padding:10px 16px;border-radius:10px;text-decoration:none}
+  #carga small{opacity:.8;font-weight:400;max-width:320px}
+</style>
+</head>
+<body>
+<div id="carga">
+  <img src="icon-192.png" alt="">
+  <div id="msg">Cargando pagos…</div>
+</div>
+<script>
+  // ⬇⬇ PEGA AQUÍ LA URL DE TU APP WEB DE APPS SCRIPT (la que termina en /exec) ⬇⬇
+  const URL_APP = 'https://script.google.com/macros/s/AKfycbxZs0cYcrJycnTGwjSXcpn_gA2DZ8h_JrcXnvc14MX5VaJCJa52Y3tSQB2Hp8NMy7Wh2A/exec';
+
+  const carga = document.getElementById('carga'), msg = document.getElementById('msg');
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(URL_APP)) {
+    msg.innerHTML = 'Falta pegar la URL de Apps Script en <b>index.html</b> (línea URL_APP).';
+  } else {
+    const f = document.createElement('iframe');
+    f.src = URL_APP;
+    f.allow = 'clipboard-write';
+    f.style.visibility = 'hidden';
+    f.onload = () => { f.style.visibility = 'visible'; carga.hidden = true; };
+    document.body.appendChild(f);
+    // Si en 15 s no cargó (por ejemplo, Google pide iniciar sesión), ofrecer abrirla directo
+    setTimeout(() => {
+      if (!carga.hidden) {
+        msg.innerHTML = 'No cargó todavía.<br><small>Puede que Google te pida iniciar sesión. Ábrela una vez directo, inicia sesión con tu cuenta personal y vuelve a abrir la app.</small>';
+        const a = document.createElement('a'); a.href = URL_APP; a.textContent = 'Abrir e iniciar sesión'; a.target = '_blank';
+        carga.appendChild(a);
+      }
+    }, 15000);
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 var(--body);-webkit-tap-highlight-color:transparent;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+.num{font-variant-numeric:tabular-nums}
+
+header{background:var(--brand);color:var(--brand-fg);
+  padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top h1{font:700 22px/1.1 var(--display);margin:0;letter-spacing:-.01em}
+.iconbtn{background:rgba(255,255,255,.14);border:0;border-radius:10px;padding:8px 12px;color:var(--brand-fg);font-weight:600;font-size:13px}
+.meses{display:flex;gap:6px;overflow-x:auto;margin-top:12px;padding-bottom:2px;scrollbar-width:none}
+.meses::-webkit-scrollbar{display:none}
+.mes{flex:0 0 auto;border:1px solid rgba(255,255,255,.3);background:transparent;color:var(--brand-fg);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;text-transform:capitalize}
+.mes[aria-pressed="true"]{background:#fff;color:#0f5c4d;border-color:#fff}
+.resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.resumen div{min-width:0}
+.resumen small{display:block;font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.06em}
+.resumen b{font:700 17px/1.2 var(--display)}
+
+main{padding:14px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.alerta{border-radius:12px;padding:10px 12px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.alerta.bad{background:var(--bad-bg);color:var(--bad)}
+.alerta.warn{background:var(--warn-bg);color:var(--warn)}
+.alerta b{font-weight:700}
+.alerta button{margin-left:auto;background:transparent;border:1px solid currentColor;border-radius:8px;padding:3px 10px;font-size:13px;font-weight:600;color:inherit;flex:0 0 auto}
+
+.sobres{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:560px){.sobres{grid-template-columns:repeat(3,1fr)}}
+.sobre{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0}
+.sobre[aria-pressed="true"]{border-color:var(--c)}
+.sobre .t{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.sobre .dia{font:700 18px/1 var(--display);color:var(--c)}
+.sobre .quien{font-size:12px;color:var(--muted);font-weight:600}
+.estadochip{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.estadochip.ok{background:var(--ok-bg);color:var(--ok)}
+.estadochip.bad{background:var(--bad-bg);color:var(--bad)}
+.estadochip.warn{background:var(--warn-bg);color:var(--warn)}
+.estadochip.neutral{background:var(--bg);color:var(--muted)}
+.barra{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.barra i{display:block;height:100%;background:var(--c);border-radius:99px}
+.fila2{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.fila2 b{color:var(--fg);font-weight:700}
+.queda{font-size:13px}
+.queda.neg{color:var(--bad);font-weight:700}
+
+.panel{background:var(--card);border-radius:16px;border:1px solid var(--line);overflow:hidden}
+.panel-h{padding:14px 14px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.panel-h h2{margin:0;font:700 19px/1.15 var(--display);color:var(--c)}
+.cuentas{display:grid;grid-template-columns:1fr;gap:6px;font-size:14px}
+.cuentas div{display:flex;justify-content:space-between;gap:8px}
+.cuentas span{color:var(--muted)}
+.cuentas .total{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:6px;font-weight:700}
+.cuentas .total.neg b{color:var(--bad)}
+.editar{background:none;border:0;padding:0;color:var(--c);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+ul.items{list-style:none;margin:0;padding:0}
+.item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.check{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:transparent;display:grid;place-items:center;padding:0}
+.check svg{width:16px;height:16px;opacity:0}
+.item.pagado .check{background:var(--ok);border-color:var(--ok)}
+.item.pagado .check svg{opacity:1}
+.item .info{flex:1;min-width:0;background:none;border:0;text-align:left;padding:0}
+.item .nom{font-weight:600;display:block;overflow-wrap:anywhere}
+.item .sub{font-size:12px;color:var(--muted)}
+.item.pagado .nom{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+.item .monto{font-weight:700;white-space:nowrap}
+.item.atrasado .sub{color:var(--bad);font-weight:600}
+.vacio{padding:18px 14px;color:var(--muted);font-size:14px}
+.seccion-t{font:700 13px/1 var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:4px 2px -4px}
+details.panel summary{padding:12px 14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;color:var(--muted)}
+details.panel summary::-webkit-details-marker{display:none}
+
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  background:var(--brand);color:var(--brand-fg);border:0;border-radius:16px;padding:14px 18px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.22);z-index:5}
+.cargando{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;z-index:20}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
+
+dialog{border:0;border-radius:20px 20px 0 0;padding:0;width:100%;max-width:560px;margin:auto auto 0;background:var(--card);color:var(--fg)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.sheet{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet h3{margin:0;font:700 20px/1.2 var(--display)}
+.sheet label{font-size:13px;color:var(--muted);font-weight:600;display:flex;flex-direction:column;gap:6px}
+.sheet input[type=text],.sheet input[type=number],.sheet input[inputmode]{font:inherit;font-size:17px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%}
+.dias{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.dias button{border:2px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 0;font-weight:700;font-size:14px}
+.dias button[aria-pressed="true"]{border-color:var(--c,var(--brand));color:var(--c,var(--brand))}
+.chk{flex-direction:row!important;align-items:center;gap:8px!important;font-size:14px!important;color:var(--fg)!important}
+.chk input{width:20px;height:20px}
+.acciones{display:flex;gap:8px;flex-wrap:wrap}
+.btn{flex:1 1 auto;border:0;border-radius:12px;padding:13px 14px;font-weight:700;background:var(--bg);color:var(--fg)}
+.btn.prim{background:var(--brand);color:var(--brand-fg)}
+.btn.peligro{background:var(--bad-bg);color:var(--bad)}
+button:focus-visible{outline:3px solid var(--d15);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Pagos Familia NV</h1>
+    <button class="iconbtn" id="btnSync" type="button" title="Traer montos nuevos del presupuesto">Actualizar montos</button>
+  </div>
+  <div class="meses" id="meses" role="group" aria-label="Mes"></div>
+  <div class="resumen num" id="resumen"></div>
+</header>
+
+<main>
+  <div id="alertas"></div>
+  <div class="sobres" id="sobres"></div>
+  <section class="panel" id="panel"></section>
+  <div id="extrasSecciones"></div>
+</main>
+
+<button class="fab" id="btnAdd" type="button">+ Pago extra</button>
+<div class="cargando" id="cargando" hidden>Guardando…</div>
+<div class="toast" id="toast" hidden></div>
+
+<dialog id="dlgItem"><form class="sheet" method="dialog" id="frmItem"></form></dialog>
+<dialog id="dlgAdd"><form class="sheet" method="dialog" id="frmAdd"></form></dialog>
+<dialog id="dlgIng"><form class="sheet" method="dialog" id="frmIng"></form></dialog>
+
+<script>
+const FECHAS = [
+  {k:'15', titulo:'Día 15', quien:'Sueldo Poso', color:'var(--d15)'},
+  {k:'25', titulo:'Día 25', quien:'Sueldo Posa', color:'var(--d25)', nota:'puede llegar hasta el 28'},
+  {k:'30', titulo:'Día 30', quien:'Sueldo Poso', color:'var(--d30)'},
+  {k:'P',  titulo:'Prima', quien:'Prima', color:'var(--dP)'}
+];
+const fmt = n => (n<0?'− ':'') + '$ ' + Math.abs(Math.round(n||0)).toLocaleString('es-CO');
+const NOMBRES_MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const nomMes = (m, corto) => { const [y,mm] = m.split('-'); const n = NOMBRES_MES[+mm-1]; return corto ? n.slice(0,3)+' '+y.slice(2) : n+' '+y; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CHECK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+let D = null;          // datos del mes
+let sel = null;        // fecha seleccionada
+let ocupado = 0;
+
+function srv(fn, ...args){
+  ocupado++; document.getElementById('cargando').hidden = false;
+  return new Promise((ok, fail) => {
+    google.script.run
+      .withSuccessHandler(r => { ocupado--; if(!ocupado) document.getElementById('cargando').hidden = true; ok(r); })
+      .withFailureHandler(e => { ocupado--; if(!ocupado) document.getElementById('cargando').hidden = true; toast(e.message || String(e)); fail(e); })
+      [fn](...args);
+  });
+}
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(()=> el.hidden = true, 2600); }
+
+// ---- cálculos ----
+function ultimoDia(mes){ const [y,m] = mes.split('-').map(Number); return new Date(y, m, 0).getDate(); }
+function limite(mes, k){ if(k==='15') return 15; if(k==='25') return 28; if(k==='30') return Math.min(30, ultimoDia(mes)); return null; }
+function diaPago(mes, k){ if(k==='30') return Math.min(30, ultimoDia(mes)); return +k; }
+/** -1 ya pasó el plazo, 0 dentro del plazo (hoy), 1 aún no llega */
+function momento(k){
+  if(k==='P' || !D) return 1;
+  const hoyMes = D.hoy.slice(0,7), hoyDia = +D.hoy.slice(8,10);
+  if(D.mes < hoyMes) return -1;
+  if(D.mes > hoyMes) return 1;
+  if(hoyDia > limite(D.mes,k)) return -1;
+  if(hoyDia >= diaPago(D.mes,k)) return 0;
+  return 1;
+}
+function activos(){ return D.items.filter(i => i.estado !== 'No aplica'); }
+function delDia(k){ return activos().filter(i => i.dia === k); }
+function totales(k){
+  const it = delDia(k);
+  const asignado = it.reduce((s,i)=>s+i.monto,0);
+  const pagado = it.filter(i=>i.estado==='Pagado').reduce((s,i)=>s+i.monto,0);
+  const ingreso = D.ingresos[k] || 0;
+  return {it, asignado, pagado, pendiente: asignado - pagado, ingreso, saldo: ingreso - pagado, queda: ingreso - asignado,
+    nPend: it.filter(i=>i.estado!=='Pagado').length};
+}
+
+// ---- render ----
+function render(){
+  if(!D) return;
+  // meses
+  document.getElementById('meses').innerHTML = D.meses.map(m =>
+    `<button class="mes" type="button" data-mes="${m}" aria-pressed="${m===D.mes}">${nomMes(m,true)}</button>`).join('');
+  const act = document.querySelector('.mes[aria-pressed="true"]'); if(act) act.scrollIntoView({inline:'center',block:'nearest'});
+
+  // fechas visibles (Prima solo si tiene algo)
+  const fechas = FECHAS.filter(f => f.k !== 'P' || delDia('P').length || D.ingresos.P);
+  if(!sel || !fechas.some(f=>f.k===sel)){
+    sel = (fechas.find(f => momento(f.k) >= 0 && totales(f.k).nPend) || fechas.find(f=>momento(f.k)>=0) || fechas[0]).k;
+  }
+
+  // resumen del mes
+  const ingTot = fechas.reduce((s,f)=>s+(D.ingresos[f.k]||0),0);
+  const asig = activos().filter(i=>i.dia).reduce((s,i)=>s+i.monto,0);
+  const pag = activos().filter(i=>i.estado==='Pagado').reduce((s,i)=>s+i.monto,0);
+  document.getElementById('resumen').innerHTML =
+    `<div><small>Ingresos</small><b>${fmt(ingTot)}</b></div>
+     <div><small>Pagado</small><b>${fmt(pag)}</b></div>
+     <div><small>Quedaría</small><b>${fmt(ingTot-asig)}</b></div>`;
+
+  // alertas
+  const atras = activos().filter(i => i.dia && i.estado !== 'Pagado' && momento(i.dia) < 0);
+  const sinFecha = activos().filter(i => !i.dia);
+  let al = '';
+  if(atras.length) al += `<div class="alerta bad"><div><b>${atras.length} pago${atras.length>1?'s':''} atrasado${atras.length>1?'s':''}</b> · ${fmt(atras.reduce((s,i)=>s+i.monto,0))}</div></div>`;
+  if(sinFecha.length) al += `<div class="alerta warn"><div><b>${sinFecha.length} pago${sinFecha.length>1?'s':''} sin fecha</b>. Asígnales día para que no se te pasen.</div><button type="button" data-ir="sinfecha">Ver</button></div>`;
+  document.getElementById('alertas').innerHTML = al;
+
+  // tarjetas por fecha
+  document.getElementById('sobres').innerHTML = fechas.map(f => {
+    const t = totales(f.k), mo = momento(f.k);
+    let chip;
+    if(!t.it.length) chip = '<span class="estadochip neutral">Sin pagos</span>';
+    else if(!t.nPend) chip = '<span class="estadochip ok">Todo pagado</span>';
+    else if(mo < 0) chip = `<span class="estadochip bad">${t.nPend} atrasado${t.nPend>1?'s':''}</span>`;
+    else if(mo === 0) chip = `<span class="estadochip warn">Toca hoy · ${t.nPend}</span>`;
+    else chip = `<span class="estadochip neutral">${t.nPend} pendiente${t.nPend>1?'s':''}</span>`;
+    const pct = t.asignado ? Math.min(100, t.pagado / t.asignado * 100) : 0;
+    return `<button class="sobre" type="button" data-sel="${f.k}" aria-pressed="${f.k===sel}" style="--c:${f.color}">
+      <div class="t"><span class="dia">${f.titulo}</span>${chip}</div>
+      <span class="quien">${f.quien}</span>
+      <div class="barra"><i style="width:${pct}%"></i></div>
+      <div class="fila2 num"><span>Pagado <b>${fmt(t.pagado)}</b></span><span>de ${fmt(t.asignado)}</span></div>
+      <div class="queda num ${t.queda<0?'neg':''}">Queda ${fmt(t.queda)}</div>
+    </button>`;
+  }).join('');
+
+  // panel de la fecha seleccionada
+  const f = FECHAS.find(x=>x.k===sel), t = totales(sel), mo = momento(sel);
+  const panel = document.getElementById('panel');
+  panel.style.setProperty('--c', f.color);
+  const orden = t.it.slice().sort((a,b)=> (a.estado==='Pagado') - (b.estado==='Pagado') || b.monto - a.monto);
+  panel.innerHTML = `
+    <div class="panel-h">
+      <h2>${f.titulo === 'Prima' ? 'Prima' : f.titulo + ' de ' + nomMes(D.mes)} · ${f.quien}</h2>
+      ${f.nota ? `<div class="sub" style="font-size:12px;color:var(--muted);margin-top:-6px">El sueldo ${f.nota}</div>` : ''}
+      <div class="cuentas num">
+        <div><span>Ingreso</span><button class="editar" type="button" data-ing="${sel}">${fmt(t.ingreso)}</button></div>
+        <div><span>Ya pagado</span><b>− ${fmt(t.pagado)}</b></div>
+        <div><span>Saldo hoy</span><b>${fmt(t.saldo)}</b></div>
+        <div><span>Por pagar</span><b>− ${fmt(t.pendiente)}</b></div>
+        <div class="total ${t.queda<0?'neg':''}"><span>Queda después de pagar todo</span><b>${fmt(t.queda)}</b></div>
+      </div>
+    </div>
+    ${orden.length ? `<ul class="items">${orden.map(i => itemHtml(i, mo)).join('')}</ul>`
+      : `<div class="vacio">No hay pagos asignados a esta fecha. Toca un pago de otra fecha para moverlo aquí, o agrega un pago extra.</div>`}`;
+
+  // sin fecha y no aplica
+  const noAp = D.items.filter(i => i.estado === 'No aplica');
+  let ex = '';
+  if(sinFecha.length) ex += `<p class="seccion-t" id="sinfecha">Sin fecha asignada</p>
+     <section class="panel" style="--c:var(--warn)"><ul class="items">${sinFecha.map(i=>itemHtml(i,1)).join('')}</ul></section>`;
+  if(noAp.length) ex += `<details class="panel" style="margin-top:14px"><summary><span>No aplica este mes (${noAp.length})</span><span>${fmt(noAp.reduce((s,i)=>s+i.monto,0))}</span></summary>
+     <ul class="items">${noAp.map(i=>itemHtml(i,1)).join('')}</ul></details>`;
+  document.getElementById('extrasSecciones').innerHTML = ex;
+}
+
+function itemHtml(i, mo){
+  const pagado = i.estado === 'Pagado', noap = i.estado === 'No aplica';
+  const atrasado = !pagado && !noap && i.dia && mo < 0;
+  let sub = i.categoria ? i.categoria.charAt(0) + i.categoria.slice(1).toLowerCase() : '';
+  if(i.origen === 'Extra') sub = 'Extra';
+  if(pagado && i.fechaPago) sub += ' · pagado ' + i.fechaPago.slice(8,10) + '/' + i.fechaPago.slice(5,7);
+  else if(atrasado) sub += ' · atrasado';
+  return `<li class="item ${pagado?'pagado':''} ${atrasado?'atrasado':''}" data-fila="${i.fila}">
+    ${noap ? '' : `<button class="check" type="button" data-toggle="${i.fila}" aria-label="${pagado?'Marcar pendiente':'Marcar pagado'}: ${esc(i.concepto)}">${CHECK}</button>`}
+    <button class="info" type="button" data-edit="${i.fila}"><span class="nom">${esc(i.concepto)}</span><span class="sub">${esc(sub)}</span></button>
+    <span class="monto num">${fmt(i.monto)}</span>
+  </li>`;
+}
+
+// ---- acciones ----
+function buscar(fila){ return D.items.find(i => i.fila === +fila); }
+
+async function cambiar(item, cambios, msg){
+  // actualización optimista
+  Object.assign(item, cambios.dia !== undefined ? {dia: cambios.dia} : {}, cambios.monto !== undefined ? {monto: +cambios.monto} : {},
+    cambios.estado !== undefined ? {estado: cambios.estado, fechaPago: cambios.estado==='Pagado' ? D.hoy : ''} : {});
+  render();
+  try { D = await srv('actualizar', D.mes, item.fila, item.concepto, cambios); render(); if(msg) toast(msg); }
+  catch(e){ cargar(D.mes); }
+}
+
+function abrirItem(item){
+  const dlg = document.getElementById('dlgItem'), frm = document.getElementById('frmItem');
+  let dia = item.dia;
+  const color = k => (FECHAS.find(f=>f.k===k)||{}).color || 'var(--brand)';
+  frm.innerHTML = `
+    <h3>${esc(item.concepto)}</h3>
+    <label>Monto este mes<input id="inMonto" inputmode="numeric" value="${item.monto}"></label>
+    <div><div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px">¿Cuándo lo pagas?</div>
+      <div class="dias" id="selDia">
+        ${[['15','15'],['25','25'],['30','30'],['P','Prima'],['','Sin fecha']].map(([k,t]) =>
+          `<button type="button" data-d="${k}" aria-pressed="${k===dia}" style="--c:${color(k)}">${t}</button>`).join('')}
+      </div></div>
+    <label class="chk"><input type="checkbox" id="inRec" ${item.origen==='Extra'?'disabled':''}> Usar este día también en los próximos meses</label>
+    <div class="acciones">
+      ${item.estado==='No aplica'
+        ? '<button class="btn" type="button" id="bAplica">Volver a contar este mes</button>'
+        : '<button class="btn" type="button" id="bNoAplica">No aplica este mes</button>'}
+      ${item.origen==='Extra' ? '<button class="btn peligro" type="button" id="bBorrar">Borrar</button>' : ''}
+    </div>
+    <div class="acciones"><button class="btn" value="cancel">Cancelar</button><button class="btn prim" type="button" id="bGuardar">Guardar</button></div>`;
+  frm.querySelector('#selDia').onclick = e => { const b = e.target.closest('[data-d]'); if(!b) return; dia = b.dataset.d;
+    frm.querySelectorAll('#selDia button').forEach(x => x.setAttribute('aria-pressed', x===b)); };
+  frm.querySelector('#bGuardar').onclick = () => {
+    const c = {}; const m = Number(String(frm.querySelector('#inMonto').value).replace(/[^\d]/g,''));
+    if(m !== item.monto) c.monto = m;
+    if(dia !== item.dia){ c.dia = dia; if(frm.querySelector('#inRec').checked) c.recordarDia = true; }
+    dlg.close(); if(Object.keys(c).length) cambiar(item, c, 'Guardado');
+  };
+  const na = frm.querySelector('#bNoAplica'); if(na) na.onclick = () => { dlg.close(); cambiar(item, {estado:'No aplica'}, 'Marcado como no aplica'); };
+  const ap = frm.querySelector('#bAplica'); if(ap) ap.onclick = () => { dlg.close(); cambiar(item, {estado:'Pendiente'}, 'Vuelve a contar'); };
+  const bo = frm.querySelector('#bBorrar'); if(bo) bo.onclick = async () => { dlg.close();
+    try { D = await srv('eliminarExtra', D.mes, item.fila, item.concepto); render(); toast('Pago borrado'); } catch(e){} };
+  dlg.showModal();
+}
+
+function abrirAdd(){
+  const dlg = document.getElementById('dlgAdd'), frm = document.getElementById('frmAdd');
+  let dia = sel;
+  frm.innerHTML = `
+    <h3>Pago extra · ${nomMes(D.mes)}</h3>
+    <label>¿Qué es?<input type="text" id="aNom" placeholder="Ej: Bravecto, Gasolina" autocomplete="off"></label>
+    <label>Monto<input id="aMonto" inputmode="numeric" placeholder="0"></label>
+    <div class="dias" id="aDia">${[['15','15'],['25','25'],['30','30'],['P','Prima'],['','Sin fecha']].map(([k,t]) =>
+      `<button type="button" data-d="${k}" aria-pressed="${k===dia}">${t}</button>`).join('')}</div>
+    <label class="chk"><input type="checkbox" id="aPag"> Ya lo pagué</label>
+    <div class="acciones"><button class="btn" value="cancel">Cancelar</button><button class="btn prim" type="button" id="aOk">Agregar</button></div>`;
+  frm.querySelector('#aDia').onclick = e => { const b = e.target.closest('[data-d]'); if(!b) return; dia = b.dataset.d;
+    frm.querySelectorAll('#aDia button').forEach(x => x.setAttribute('aria-pressed', x===b)); };
+  frm.querySelector('#aOk').onclick = async () => {
+    const nom = frm.querySelector('#aNom').value.trim(); const m = Number(frm.querySelector('#aMonto').value.replace(/[^\d]/g,''));
+    if(!nom || !m){ toast('Escribe el nombre y el monto'); return; }
+    dlg.close();
+    try { D = await srv('agregarExtra', D.mes, {concepto:nom, monto:m, dia, pagado: frm.querySelector('#aPag').checked}); if(dia) sel = dia; render(); toast('Pago agregado'); } catch(e){}
+  };
+  dlg.showModal(); setTimeout(()=>frm.querySelector('#aNom').focus(), 50);
+}
+
+function abrirIngreso(k){
+  const dlg = document.getElementById('dlgIng'), frm = document.getElementById('frmIng'), f = FECHAS.find(x=>x.k===k);
+  frm.innerHTML = `<h3>Ingreso ${f.titulo} · ${nomMes(D.mes)}</h3>
+    <label>${f.quien}<input id="iVal" inputmode="numeric" value="${D.ingresos[k]||0}"></label>
+    <p style="margin:0;font-size:13px;color:var(--muted)">Por defecto se toma del presupuesto: el sueldo Poso se divide entre el 15 y el 30, y el sueldo Posa entra el 25.</p>
+    <div class="acciones"><button class="btn" type="button" id="iDef">Usar el del presupuesto</button></div>
+    <div class="acciones"><button class="btn" value="cancel">Cancelar</button><button class="btn prim" type="button" id="iOk">Guardar</button></div>`;
+  frm.querySelector('#iOk').onclick = async () => { dlg.close();
+    try { D = await srv('guardarIngreso', D.mes, k, Number(frm.querySelector('#iVal').value.replace(/[^\d]/g,''))); render(); toast('Ingreso guardado'); } catch(e){} };
+  frm.querySelector('#iDef').onclick = async () => { dlg.close();
+    try { D = await srv('guardarIngreso', D.mes, k, ''); render(); } catch(e){} };
+  dlg.showModal();
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.mes){ sel = null; cargar(b.dataset.mes); return; }
+  if(b.dataset.sel){ sel = b.dataset.sel; render(); document.getElementById('panel').scrollIntoView({behavior:'smooth', block:'start'}); return; }
+  if(b.dataset.toggle){ const it = buscar(b.dataset.toggle); if(!it) return;
+    const nuevo = it.estado === 'Pagado' ? 'Pendiente' : 'Pagado';
+    cambiar(it, {estado:nuevo}, nuevo==='Pagado' ? `${it.concepto}: pagado` : `${it.concepto}: pendiente`); return; }
+  if(b.dataset.edit){ const it = buscar(b.dataset.edit); if(it) abrirItem(it); return; }
+  if(b.dataset.ing){ abrirIngreso(b.dataset.ing); return; }
+  if(b.dataset.ir){ const el = document.getElementById(b.dataset.ir); if(el) el.scrollIntoView({behavior:'smooth'}); return; }
+});
+document.getElementById('btnAdd').onclick = () => D && abrirAdd();
+document.getElementById('btnSync').onclick = async () => { if(!D) return;
+  try { D = await srv('sincronizar', D.mes); render(); toast('Montos actualizados desde el presupuesto'); } catch(e){} };
+
+async function cargar(mes){
+  try { D = await srv('getMes', mes || null); render(); } catch(e){}
+}
+cargar();
+</script>
+</body>
+</html>
