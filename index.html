@@ -31,20 +31,10 @@
   if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(URL_APP)) {
     msg.innerHTML = 'Falta pegar la URL de Apps Script en <b>index.html</b> (línea URL_APP).';
   } else {
-    const f = document.createElement('iframe');
-    f.src = URL_APP;
-    f.allow = 'clipboard-write';
-    f.style.visibility = 'hidden';
-    f.onload = () => { f.style.visibility = 'visible'; carga.hidden = true; };
-    document.body.appendChild(f);
-    // Si en 15 s no cargó (por ejemplo, Google pide iniciar sesión), ofrecer abrirla directo
-    setTimeout(() => {
-      if (!carga.hidden) {
-        msg.innerHTML = 'No cargó todavía.<br><small>Puede que Google te pida iniciar sesión. Ábrela una vez directo, inicia sesión con tu cuenta personal y vuelve a abrir la app.</small>';
-        const a = document.createElement('a'); a.href = URL_APP; a.textContent = 'Abrir e iniciar sesión'; a.target = '_blank';
-        carga.appendChild(a);
-      }
-    }, 15000);
+    // En vez de abrir la app dentro de un marco (iframe), la abrimos directamente.
+    // Así Google no bloquea el inicio de sesión (sobre todo en iPhone).
+    msg.textContent = 'Abriendo pagos…';
+    setTimeout(() => location.replace(URL_APP), 400);
   }
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
